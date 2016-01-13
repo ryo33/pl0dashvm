@@ -64,7 +64,7 @@ func Process(program []Word, option Option) (string, error) {
 			v := word.value.([2]int)
 			n := memory[v[1]-1]
 			if n.category != W_value {
-				return result, processing_error("is not a value")
+				return result, processing_error("expects a value")
 			}
 			switch v[0] {
 			case Reg_A:
@@ -209,5 +209,5 @@ func Process(program []Word, option Option) (string, error) {
 }
 
 func processing_error(str string) error {
-	return errors.New(fmt.Sprintf("[%d] %s", pc+1, str))
+	return errors.New(fmt.Sprintf("process failed at %d: %s", pc, str))
 }

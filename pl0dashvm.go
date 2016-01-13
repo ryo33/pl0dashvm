@@ -68,7 +68,7 @@ func action(c *cli.Context) {
 	result, errs := vm.Run(lines, option)
 	if len(errs) != 0 {
 		for _, err := range errs {
-			fmt.Fprintf(os.Stderr, "parse failed %s\n", err.Error())
+			fmt.Fprintln(os.Stderr, err)
 		}
 		os.Exit(1)
 	}
