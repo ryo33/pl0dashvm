@@ -42,10 +42,15 @@ const (
 )
 
 type Option struct {
+	trace bool
 }
 
 func NewOption() Option {
-	return Option{}
+	return Option{trace: false}
+}
+
+func (o *Option) Trace() {
+	o.trace = true
 }
 
 const (
@@ -54,7 +59,12 @@ const (
 	Reg_C
 )
 
+var (
+	lines []string
+)
+
 func Run(source []string, option Option) (string, error) {
+	lines = source
 	parsed, err := Parse(source, option)
 	if err != nil {
 		return "", err

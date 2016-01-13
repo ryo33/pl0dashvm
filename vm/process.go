@@ -21,6 +21,14 @@ var (
 	reg_c  int
 )
 
+func trace_start() {
+	result += fmt.Sprintf("OUTPUT\tPC\tSP\tA\tB\tC\tCOMMAND\n")
+}
+
+func trace() {
+	result += fmt.Sprintf("\t%d\t%d\t%d\t%d\t%d\t%s\n", pc+1, sp+1, reg_a, reg_b, reg_c, lines[pc])
+}
+
 func Process(program []Word, option Option) (string, error) {
 	memory = [memory_size]Word{}
 	result = ""
@@ -29,8 +37,14 @@ func Process(program []Word, option Option) (string, error) {
 	if len(program) > program_size {
 		return result, errors.New("lines of program must be 800 or less")
 	}
+	if option.trace {
+		trace_start()
+	}
 	copy(memory[:], program[:])
 	for {
+		if option.trace {
+			trace()
+		}
 		word := memory[pc]
 		pc++
 		switch word.category {

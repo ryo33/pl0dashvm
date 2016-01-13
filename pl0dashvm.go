@@ -14,6 +14,12 @@ func main() {
 	app.Name = "pl0dashrun"
 	app.Usage = ""
 	app.Action = action
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "trace, t",
+			Usage: "print detailed reporting",
+		},
+	}
 	app.Run(os.Args)
 }
 
@@ -34,7 +40,11 @@ func action(c *cli.Context) {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-	result, err := vm.Run(lines, vm.NewOption())
+	option := vm.NewOption()
+	if c.Bool("trace") {
+		option.Trace()
+	}
+	result, err := vm.Run(lines, option)
 	if err != nil {
 		log.Fatal(err)
 	}

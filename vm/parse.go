@@ -11,8 +11,6 @@ var (
 	line        int // current line
 	position    int // current position
 	length      int // current line length
-	get         func() (byte, bool)
-	slice       func(int, int) string
 )
 
 var (
@@ -22,16 +20,6 @@ var (
 func Parse(lines []string, _option Option) ([]Word, error) {
 	lines_count = len(lines)
 	line = 0
-	get = func() (byte, bool) {
-		if position < length {
-			return lines[line][position], true
-		} else {
-			return byte(' '), false
-		}
-	}
-	slice = func(start, end int) string {
-		return lines[line][start:end]
-	}
 	result := make([]Word, lines_count, lines_count)
 	for i, l := range lines {
 		line = i
@@ -274,6 +262,18 @@ func comma() error {
 	}
 	whitespaces()
 	return nil
+}
+
+func get() (byte, bool) {
+	if position < length {
+		return lines[line][position], true
+	} else {
+		return byte(' '), false
+	}
+}
+
+func slice(start, end int) string {
+	return lines[line][start:end]
 }
 
 func csm(str string) bool {
