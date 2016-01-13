@@ -48,67 +48,67 @@ func Parse(lines []string, _option Option) ([]Word, error) {
 func parseLine() (Word, error) {
 	position = 0
 	switch {
-	case p(0) && csm('L') && csm('O') && csm('A') && csm('D'):
+	case csm("LOAD"):
 		return parseLoad()
-	case p(0) && csm('S') && csm('T') && csm('O') && csm('R') && csm('E'):
+	case csm("STORE"):
 		return parseStore()
-	case p(0) && csm('P'):
+	case csm("P"):
 		switch {
-		case p(1) && csm('R') && csm('I') && csm('N') && csm('T'):
+		case csm("RINT"):
 			switch {
-			case p(5) && csm('L') && csm('N'):
+			case csm("LN"):
 				return parseOpe(W_println)
-			case p(5):
+			default:
 				return parsePushPop(W_print)
 			}
 
-		case p(1) && csm('U') && csm('S') && csm('H'):
+		case csm("USH"):
 			return parsePushPop(W_push)
-		case p(1) && csm('O') && csm('P'):
+		case csm("OP"):
 			return parsePushPop(W_pop)
-		case p(1) && csm('L') && csm('U') && csm('S'):
+		case csm("LUS"):
 			return parseOpe(W_plus)
 		}
-	case p(0) && csm('M'):
+	case csm("M"):
 		switch {
-		case p(1) && csm('I') && csm('N') && csm('U') && csm('S'):
+		case csm("INUS"):
 			return parseOpe(W_minus)
-		case p(1) && csm('U') && csm('L') && csm('T') && csm('I'):
+		case csm("ULTI"):
 			return parseOpe(W_multi)
 		}
-	case p(0) && csm('D') && csm('I') && csm('V'):
+	case csm("DIV"):
 		return parseOpe(W_div)
-	case p(0) && csm('C') && csm('M') && csm('P'):
+	case csm("CMP"):
 		switch {
-		case p(3) && csm('O') && csm('D') && csm('D'):
+		case csm("ODD"):
 			return parseOpe(W_cmpodd)
-		case p(3) && csm('E') && csm('Q'):
+		case csm("EQ"):
 			return parseOpe(W_cmpeq)
-		case p(3) && csm('N') && csm('O') && csm('T') && csm('E') && csm('Q'):
+		case csm("NOTEQ"):
 			return parseOpe(W_cmpnoteq)
-		case p(3) && csm('L'):
+		case csm("L"):
 			switch {
-			case p(4) && csm('T'):
+			case csm("T"):
 				return parseOpe(W_cmplt)
-			case p(4) && csm('E'):
+			case csm("E"):
 				return parseOpe(W_cmple)
 			}
-		case p(3) && csm('G'):
+		case csm("G"):
 			switch {
-			case p(4) && csm('T'):
+			case csm("T"):
 				return parseOpe(W_cmpgt)
-			case p(4) && csm('E'):
+			case csm("E"):
 				return parseOpe(W_cmpge)
 			}
 		}
-	case p(0) && csm('J'):
+	case csm("J"):
 		switch {
-		case p(1) && csm('M') && csm('P'):
+		case csm("MP"):
 			return parseJmp(W_jmp)
-		case p(1) && csm('P') && csm('C'):
+		case csm("PC"):
 			return parseJmp(W_jpc)
 		}
-	case p(0) && csm('E') && csm('N') && csm('D'):
+	case csm("END"):
 		return parseOpe(W_end)
 	}
 	return errorWord, errors.New("wrong command")
@@ -126,15 +126,15 @@ func parseLoad() (Word, error) {
 		return errorWord, err
 	}
 	switch {
-	case csm('#'):
-		if err := csm_or_err('('); err != nil {
+	case csm("#"):
+		if err := csm_or_err("("); err != nil {
 			return errorWord, err
 		}
 		add, err := parseNumber()
 		if err != nil {
 			return errorWord, err
 		}
-		if err := csm_or_err(')'); err != nil {
+		if err := csm_or_err(")"); err != nil {
 			return errorWord, err
 		}
 		if err := eof(); err != nil {
@@ -164,10 +164,10 @@ func parseStore() (Word, error) {
 	if err := comma(); err != nil {
 		return errorWord, err
 	}
-	if err := csm_or_err('#'); err != nil {
+	if err := csm_or_err("#"); err != nil {
 		return errorWord, err
 	}
-	if err := csm_or_err('('); err != nil {
+	if err := csm_or_err("("); err != nil {
 		return errorWord, err
 	}
 	var v2 int
@@ -196,7 +196,7 @@ func parseStore() (Word, error) {
 		}
 		cat = W_store_mem
 	}
-	if err := csm_or_err(')'); err != nil {
+	if err := csm_or_err(")"); err != nil {
 		return errorWord, err
 	}
 	return newWord(cat, [2]int{reg, v2}), nil
@@ -248,11 +248,11 @@ func parseJmp(category int) (Word, error) {
 
 func parseReg() (int, error) {
 	switch {
-	case csm('A'):
+	case csm("A"):
 		return Reg_A, nil
-	case csm('B'):
+	case csm("B"):
 		return Reg_B, nil
-	case csm('C'):
+	case csm("C"):
 		return Reg_C, nil
 	default:
 		return 0, errors.New("expects register")
@@ -269,32 +269,31 @@ func parseOpe(category int) (Word, error) {
 
 func comma() error {
 	whitespaces()
-	if err := csm_or_err(','); err != nil {
+	if err := csm_or_err(","); err != nil {
 		return err
 	}
 	whitespaces()
 	return nil
 }
 
-func csm(char rune) bool {
-	v, ok := get()
-	if ok && v == byte(char) {
+func csm(str string) bool {
+	tmp := position
+	for _, b := range str {
+		v, ok := get()
+		if !ok || v != byte(b) {
+			position = tmp
+			return false
+		}
 		position++
-		return true
 	}
-	return false
-}
-
-func p(n int) bool {
-	position = n
 	return true
 }
 
-func csm_or_err(char rune) error {
-	if csm(char) {
+func csm_or_err(str string) error {
+	if csm(str) {
 		return nil
 	}
-	return errors.New(fmt.Sprintf("expects %c", char))
+	return errors.New(fmt.Sprintf("expects %s", str))
 }
 
 func csm_until(fn func(rune) bool) (string, int) {
@@ -312,7 +311,7 @@ func csm_until(fn func(rune) bool) (string, int) {
 
 func whitespaces() error {
 	var i int
-	for i = 0; csm(' ') || csm('\t'); i++ {
+	for i = 0; csm(" ") || csm("\t"); i++ {
 	}
 	if i == 0 {
 		return errors.New("expects whitespace")
