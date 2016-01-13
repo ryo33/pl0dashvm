@@ -12,14 +12,33 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "pl0dashrun"
-	app.Usage = ""
+	app.Usage = "run pl0dash"
 	app.Action = action
+	app.HideHelp = true
 	app.Flags = []cli.Flag{
+		cli.HelpFlag,
 		cli.BoolFlag{
 			Name:  "trace, t",
 			Usage: "print detailed reporting",
 		},
 	}
+	cli.AppHelpTemplate = `NAME:
+	{{.Name}} - {{.Usage}}
+
+	USAGE:
+		{{.Name}} [options] [arguments...]
+
+	VERSION:
+		{{.Version}}{{if or .Author .Email}}
+
+	AUTHOR:{{if .Author}}
+		{{.Author}}{{if .Email}} - <{{.Email}}>{{end}}{{else}}
+		{{.Email}}{{end}}{{end}}
+
+	OPTIONS:
+		{{range .Flags}}{{.}}
+		{{end}}
+	`
 	app.Run(os.Args)
 }
 
