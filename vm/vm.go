@@ -1,5 +1,10 @@
 package vm
 
+import (
+	"fmt"
+	"os"
+)
+
 type Word struct {
 	category int
 	value    interface{}
@@ -65,9 +70,12 @@ var (
 
 func Run(source []string, option Option) (string, error) {
 	lines = source
-	parsed, err := Parse(source, option)
-	if err != nil {
-		return "", err
+	parsed, errs := Parse(source, option)
+	if len(errs) != 0 {
+		for _, err := range errs {
+			fmt.Fprintf(os.Stderr, "parse failed %s\n", err.Error())
+		}
+		os.Exit(1)
 	}
 	result, err := Process(parsed, option)
 	if err != nil {

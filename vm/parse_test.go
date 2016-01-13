@@ -5,7 +5,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	parsed, err := Parse([]string{
+	parsed, errs := Parse([]string{
 		"LOAD A, 100",
 		"LOAD B, #(100)",
 		"STORE C, #(100)",
@@ -29,8 +29,11 @@ func TestParse(t *testing.T) {
 		"PRINTLN",
 		"END",
 	}, NewOption())
-	if err != nil {
-		t.Fatalf("parse failed: \"%s\"", err.Error())
+	if len(errs) != 0 {
+		for _, err := range errs {
+			t.Errorf("parse failed: %s", err.Error())
+		}
+		t.FailNow()
 	}
 	testParse(t, 0, parsed[0], W_load, twoint, [2]int{Reg_A, 100})
 	testParse(t, 1, parsed[1], W_load_mem, twoint, [2]int{Reg_B, 100})

@@ -17,20 +17,21 @@ var (
 	word Word
 )
 
-func Parse(lines []string, _option Option) ([]Word, error) {
+func Parse(lines []string, _option Option) ([]Word, []error) {
 	lines_count = len(lines)
 	line = 0
 	result := make([]Word, lines_count, lines_count)
+	errs := make([]error, 0)
 	for i, l := range lines {
 		line = i
 		length = len(l)
 		w, err := parseLine()
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("error %d-%d: <%s>", i+1, position+1, err.Error()))
+			errs = append(errs, errors.New(fmt.Sprintf("at %d,%d:\t%s", i+1, position+1, err.Error())))
 		}
 		result[i] = w
 	}
-	return result, nil
+	return result, errs
 }
 
 func parseLine() (Word, error) {
