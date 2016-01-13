@@ -45,7 +45,10 @@ func Process(program []Word, option Option) (string, error) {
 		if option.trace {
 			trace()
 		}
-		word := memory[pc]
+		word, err := fetch(pc)
+		if err != nil {
+			return result, err
+		}
 		pc++
 		switch word.category {
 		case W_value:
@@ -62,7 +65,10 @@ func Process(program []Word, option Option) (string, error) {
 			}
 		case W_load_mem:
 			v := word.value.([2]int)
-			n := memory[v[1]-1]
+			n, err := fetch(v[1] - 1)
+			if err != nil {
+				return result, err
+			}
 			if n.category != W_value {
 				return result, processing_error("expects a value")
 			}
@@ -76,13 +82,17 @@ func Process(program []Word, option Option) (string, error) {
 			}
 		case W_store_mem:
 			v := word.value.([2]int)
+			var err error
 			switch v[0] {
 			case Reg_A:
-				memory[v[1]-1] = newWord(W_value, reg_a)
+				err = push(v[1]-1, newWord(W_value, reg_a))
 			case Reg_B:
-				memory[v[1]-1] = newWord(W_value, reg_b)
+				err = push(v[1]-1, newWord(W_value, reg_b))
 			case Reg_C:
-				memory[v[1]-1] = newWord(W_value, reg_c)
+				err = push(v[1]-1, newWord(W_value, reg_c))
+			}
+			if err != nil {
+				return result, err
 			}
 		case W_store_ref:
 			v := word.value.([2]int)
@@ -95,13 +105,17 @@ func Process(program []Word, option Option) (string, error) {
 			case Reg_C:
 				ad = reg_c
 			}
+			var err error
 			switch v[0] {
 			case Reg_A:
-				memory[ad-1] = newWord(W_value, reg_a)
+				err = push(ad-1, newWord(W_value, reg_a))
 			case Reg_B:
-				memory[ad-1] = newWord(W_value, reg_b)
+				err = push(ad-1, newWord(W_value, reg_b))
 			case Reg_C:
-				memory[ad-1] = newWord(W_value, reg_c)
+				err = push(ad-1, newWord(W_value, reg_c))
+			}
+			if err != nil {
+				return result, err
 			}
 		case W_push:
 			if sp == 0 {
@@ -206,6 +220,21 @@ func Process(program []Word, option Option) (string, error) {
 			return result, processing_error("wrong command")
 		}
 	}
+}
+
+func fetch(address int) (Word, error) {
+	if address >= 0 && address < memory_size {
+		return memory[address], nil
+	}
+	return errorWord, processing_error(fmt.Sprintf("wrong address %d", address+1))
+}
+
+func push(address int, word Word) error {
+	if address >= 0 && address < memory_size {
+		memory[address] = word
+		return nil
+	}
+	return processing_error(fmt.Sprintf("wrong address %d", address+1))
 }
 
 func processing_error(str string) error {
