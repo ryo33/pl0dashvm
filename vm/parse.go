@@ -38,7 +38,7 @@ func Parse(lines []string, _option Option) ([]Word, error) {
 		length = len(l)
 		w, err := parseLine()
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("error %d-%d: <%s>", i, position, err.Error()))
+			return nil, errors.New(fmt.Sprintf("error %d-%d: <%s>", i+1, position+1, err.Error()))
 		}
 		result[i] = w
 	}
