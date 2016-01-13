@@ -170,10 +170,10 @@ func Process(program []Word, option Option) (string, error) {
 				reg_c = 0
 			}
 		case W_jmp:
-			pc = word.value.(int) + 1
+			pc = word.value.(int) - 1
 		case W_jpc:
 			if reg_c == 0 {
-				pc = word.value.(int) + 1
+				pc = word.value.(int) - 1
 			}
 		case W_print:
 			switch word.value.(int) {
