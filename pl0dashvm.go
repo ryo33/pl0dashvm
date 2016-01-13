@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/codegangsta/cli"
 	"github.com/ryo33/pl0dashvm/vm"
-	"log"
 	"os"
 )
 
@@ -45,11 +44,13 @@ func main() {
 func action(c *cli.Context) {
 	args := c.Args()
 	if len(args) == 0 {
-		log.Fatal("filename required")
+		fmt.Fprintln(os.Stderr, "filename required")
+		os.Exit(1)
 	}
 	f, err := os.Open(args[0])
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 	var lines []string
 	scanner := bufio.NewScanner(f)
@@ -57,15 +58,19 @@ func action(c *cli.Context) {
 		lines = append(lines, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 	option := vm.NewOption()
 	if c.Bool("trace") {
 		option.Trace()
 	}
-	result, err := vm.Run(lines, option)
-	if err != nil {
-		log.Fatal(err)
+	result, errs := vm.Run(lines, option)
+	if len(errs) != 0 {
+		for _, err := range errs {
+			fmt.Fprintf(os.Stderr, "parse failed %s\n", err.Error())
+		}
+		os.Exit(1)
 	}
 	fmt.Print(result)
 }
