@@ -48,7 +48,7 @@ func Process(program []Word, option Option) (string, error) {
 			}
 		case W_load_mem:
 			v := word.value.([2]int)
-			n := memory[v[1]+1]
+			n := memory[v[1]-1]
 			if n.category != W_value {
 				return result, processing_error("is not a value")
 			}
@@ -64,11 +64,11 @@ func Process(program []Word, option Option) (string, error) {
 			v := word.value.([2]int)
 			switch v[0] {
 			case Reg_A:
-				memory[v[1]+1] = newWord(W_value, reg_a)
+				memory[v[1]-1] = newWord(W_value, reg_a)
 			case Reg_B:
-				memory[v[1]+1] = newWord(W_value, reg_b)
+				memory[v[1]-1] = newWord(W_value, reg_b)
 			case Reg_C:
-				memory[v[1]+1] = newWord(W_value, reg_c)
+				memory[v[1]-1] = newWord(W_value, reg_c)
 			}
 		case W_store_ref:
 			v := word.value.([2]int)
@@ -83,11 +83,11 @@ func Process(program []Word, option Option) (string, error) {
 			}
 			switch v[0] {
 			case Reg_A:
-				memory[ad+1] = newWord(W_value, reg_a)
+				memory[ad-1] = newWord(W_value, reg_a)
 			case Reg_B:
-				memory[ad+1] = newWord(W_value, reg_b)
+				memory[ad-1] = newWord(W_value, reg_b)
 			case Reg_C:
-				memory[ad+1] = newWord(W_value, reg_c)
+				memory[ad-1] = newWord(W_value, reg_c)
 			}
 		case W_push:
 			if sp == 0 {
@@ -195,5 +195,5 @@ func Process(program []Word, option Option) (string, error) {
 }
 
 func processing_error(str string) error {
-	return errors.New(fmt.Sprintf("[%d] %s", pc-1, str))
+	return errors.New(fmt.Sprintf("[%d] %s", pc+1, str))
 }
