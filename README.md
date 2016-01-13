@@ -8,7 +8,7 @@ Run the following commands:
 `$ go install github.com/ryo33/pl0dashvm`  
 
 ## Feature
-See following files:  
+See the following files:  
 [features/run.feature](features/run.feature)  
 [features/parse_fail.feature](features/parse_fail.feature)  
 [features/process_fail.feature](features/process_fail.feature)  
