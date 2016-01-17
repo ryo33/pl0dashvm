@@ -14,8 +14,8 @@ const (
 var (
 	memory [memory_size]Word
 	result string
-	pc     int // program counter
-	sp     int // stack pointer
+	reg_pc int // program counter
+	reg_sp int // stack pointer
 	reg_a  int
 	reg_b  int
 	reg_c  int
@@ -26,14 +26,14 @@ func trace_start() {
 }
 
 func trace() {
-	result += fmt.Sprintf("\t%d\t%d\t%d\t%d\t%d\t%s\n", pc+1, sp+1, reg_a, reg_b, reg_c, lines[pc])
+	result += fmt.Sprintf("\t%d\t%d\t%d\t%d\t%d\t%s\n", reg_pc, reg_sp, reg_a, reg_b, reg_c, lines[reg_pc-1])
 }
 
 func Process(program []Word, option Option) (string, error) {
 	memory = [memory_size]Word{}
 	result = ""
-	pc = 0
-	sp = memory_size - 1
+	reg_pc = 1
+	reg_sp = memory_size + 1
 	if len(program) > program_size {
 		return result, errors.New("lines of program must be 800 or less")
 	}
@@ -45,11 +45,10 @@ func Process(program []Word, option Option) (string, error) {
 		if option.trace {
 			trace()
 		}
-		word, err := fetch(pc)
+		word, err := fetch(reg_pc)
 		if err != nil {
 			return result, err
 		}
-		pc++
 		switch word.category {
 		case W_value:
 			return result, processing_error("can not execute value")
@@ -65,7 +64,7 @@ func Process(program []Word, option Option) (string, error) {
 			}
 		case W_load_mem:
 			v := word.value.([2]int)
-			n, err := fetch(v[1] - 1)
+			n, err := fetch(v[1])
 			if err != nil {
 				return result, err
 			}
@@ -85,11 +84,11 @@ func Process(program []Word, option Option) (string, error) {
 			var err error
 			switch v[0] {
 			case Reg_A:
-				err = push(v[1]-1, newWord(W_value, reg_a))
+				err = push(v[1], newWord(W_value, reg_a))
 			case Reg_B:
-				err = push(v[1]-1, newWord(W_value, reg_b))
+				err = push(v[1], newWord(W_value, reg_b))
 			case Reg_C:
-				err = push(v[1]-1, newWord(W_value, reg_c))
+				err = push(v[1], newWord(W_value, reg_c))
 			}
 			if err != nil {
 				return result, err
@@ -108,34 +107,40 @@ func Process(program []Word, option Option) (string, error) {
 			var err error
 			switch v[0] {
 			case Reg_A:
-				err = push(ad-1, newWord(W_value, reg_a))
+				err = push(ad, newWord(W_value, reg_a))
 			case Reg_B:
-				err = push(ad-1, newWord(W_value, reg_b))
+				err = push(ad, newWord(W_value, reg_b))
 			case Reg_C:
-				err = push(ad-1, newWord(W_value, reg_c))
+				err = push(ad, newWord(W_value, reg_c))
 			}
 			if err != nil {
 				return result, err
 			}
 		case W_push:
-			if sp == 0 {
+			if reg_sp == 1+1 {
 				return result, processing_error("can not push into stack")
 			}
+			reg_sp--
+			var err error
 			switch word.value.(int) {
 			case Reg_A:
-				memory[sp] = newWord(W_value, reg_a)
+				err = push(reg_sp, newWord(W_value, reg_a))
 			case Reg_B:
-				memory[sp] = newWord(W_value, reg_b)
+				err = push(reg_sp, newWord(W_value, reg_b))
 			case Reg_C:
-				memory[sp] = newWord(W_value, reg_c)
+				err = push(reg_sp, newWord(W_value, reg_c))
 			}
-			sp-- // push
+			if err != nil {
+				return result, err
+			}
 		case W_pop:
-			if sp == memory_size-1 {
+			if reg_sp == memory_size+1 {
 				return result, processing_error("can not pop from stack")
 			}
-			sp++ // pop
-			popped := memory[sp]
+			popped, err := fetch(reg_sp)
+			if err != nil {
+				return result, err
+			}
 			if popped.category != W_value {
 				return result, processing_error("can not pop which is not a value from stack")
 			}
@@ -147,6 +152,7 @@ func Process(program []Word, option Option) (string, error) {
 			case Reg_C:
 				reg_c = popped.value.(int)
 			}
+			reg_sp++ // pop
 		case W_plus:
 			reg_c = reg_a + reg_b
 		case W_minus:
@@ -198,10 +204,12 @@ func Process(program []Word, option Option) (string, error) {
 				reg_c = 0
 			}
 		case W_jmp:
-			pc = word.value.(int) - 1
+			reg_pc = word.value.(int)
+			reg_pc-- // To cancel reg_pc++ after this switch statement
 		case W_jpc:
 			if reg_c == 0 {
-				pc = word.value.(int) - 1
+				reg_pc = word.value.(int)
+				reg_pc-- // To cancel reg_pc++ after this switch statement
 			}
 		case W_print:
 			switch word.value.(int) {
@@ -219,24 +227,25 @@ func Process(program []Word, option Option) (string, error) {
 		default:
 			return result, processing_error("wrong command")
 		}
+		reg_pc++
 	}
 }
 
 func fetch(address int) (Word, error) {
-	if address >= 0 && address < memory_size {
-		return memory[address], nil
+	if address >= 1 && address <= memory_size {
+		return memory[address-1], nil
 	}
-	return errorWord, processing_error(fmt.Sprintf("wrong address %d", address+1))
+	return errorWord, processing_error(fmt.Sprintf("wrong address %d", address))
 }
 
 func push(address int, word Word) error {
-	if address >= 0 && address < memory_size {
-		memory[address] = word
+	if address >= 1 && address <= memory_size {
+		memory[address-1] = word
 		return nil
 	}
-	return processing_error(fmt.Sprintf("wrong address %d", address+1))
+	return processing_error(fmt.Sprintf("wrong address %d", address))
 }
 
 func processing_error(str string) error {
-	return errors.New(fmt.Sprintf("process failed at %d: %s", pc, str))
+	return errors.New(fmt.Sprintf("process failed at %d: %s", reg_pc, str))
 }

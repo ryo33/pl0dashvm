@@ -16,15 +16,15 @@ Feature: Run programs with trace option
         Then the output should contain exactly:
         """
         OUTPUT	PC	SP	A	B	C	COMMAND
-        	1	1000	0	0	0	LOAD A, 1
-        	2	1000	1	0	0	LOAD B, 2
-        	3	1000	1	2	0	LOAD C, 3
-        	4	1000	1	2	3	PRINT A
-        1	5	1000	1	2	3	PRINT B
-        2	6	1000	1	2	3	PRINTLN
+        	1	1001	0	0	0	LOAD A, 1
+        	2	1001	1	0	0	LOAD B, 2
+        	3	1001	1	2	0	LOAD C, 3
+        	4	1001	1	2	3	PRINT A
+        1	5	1001	1	2	3	PRINT B
+        2	6	1001	1	2	3	PRINTLN
 
-        	7	1000	1	2	3	PRINT C
-        3	8	1000	1	2	3	PRINTLN
+        	7	1001	1	2	3	PRINT C
+        3	8	1001	1	2	3	PRINTLN
 
-        	9	1000	1	2	3	END
+        	9	1001	1	2	3	END
         """
